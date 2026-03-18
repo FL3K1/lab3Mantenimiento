@@ -1,6 +1,5 @@
-name: Unit Tests and Coverage
+name: Django CI/CD Pipeline
 
-# Se ejecuta al hacer push o pull request a la rama main
 on:
   push:
     branches: [ "main" ]
@@ -8,23 +7,23 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.12"
-        
-    - name: Install dependencies
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Compose
+      run: docker-compose up -d
+
+    - name: Wait for database to be ready
+      run: sleep 10
+
+    - name: Install coverage
+      run: docker-compose exec -T web pip install coverage
+
+    - name: Run tests with coverage
       run: |
-        python -m pip install --upgrade pip
-        pip install coverage
-        
-    - name: Run tests with Coverage
-      # Este comando ejecuta los tests y falla si la cobertura no llega al 80%
-      run: |
-        coverage run -m unittest discover
-        coverage report -m --fail-under=80
+        docker-compose exec -T web coverage run manage.py test
+        docker-compose exec -T web coverage report -m --fail-under=80
