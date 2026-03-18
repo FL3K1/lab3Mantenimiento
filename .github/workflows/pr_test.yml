@@ -17,22 +17,6 @@ jobs:
     - name: Set up environment variables
       run: cp .env.example .env
 
-    # --- EL PASO MÁGICO QUE ARREGLA EL PROBLEMA DE WINDOWS ---
-    - name: Fix Windows line endings
-      run: |
-        sudo apt-get install -y dos2unix
-        find . -type f -name "*.sh" -exec dos2unix {} +
-        dos2unix manage.py || true
-
-    - name: Set up Docker Compose
-      run: docker compose up -d
-
-    - name: Wait for database to be ready
-      run: sleep 10
-
-    - name: Install coverage
-      run: docker compose exec -T web pip install coverage
-
     - name: Run tests with coverage
       run: |
         docker compose exec -T web coverage run manage.py test
