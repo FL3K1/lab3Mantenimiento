@@ -1,0 +1,37 @@
+name: PR Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up environment variables
+      run: cp .env.example .env
+
+    - name: Set up Docker Compose
+      run: docker compose up -d
+
+    - name: Wait for database to be ready
+      run: sleep 10
+
+    - name: Check logs to see why web crashed
+      run: |
+        docker compose ps
+        docker compose logs web
+
+    - name: Install coverage
+      run: docker compose exec -T web pip install coverage
+
+    - name: Run tests with coverage
+      run: |
+        docker compose exec -T web coverage run manage.py test
+        docker compose exec -T web coverage report -m --fail-under=80
