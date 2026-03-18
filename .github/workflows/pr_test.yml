@@ -12,11 +12,27 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up environment variables
       run: cp .env.example .env
 
+    # 1. Arreglamos los saltos de línea de Windows a Linux para que el contenedor no explote
+    - name: Fix Windows line endings
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y dos2unix
+        find . -type f -name "*.sh" -exec dos2unix {} +
+        dos2unix manage.py || true
+
+    # 2. Levantamos Docker FORZANDO la build para que lea el nuevo requirements.txt
+    - name: Set up Docker Compose
+      run: docker compose up -d --build
+
+    - name: Wait for database to be ready
+      run: sleep 10
+
+    # 3. Lanzamos los tests directamente (sin pip install porque ya está en el requirements)
     - name: Run tests with coverage
       run: |
         docker compose exec -T web coverage run manage.py test
