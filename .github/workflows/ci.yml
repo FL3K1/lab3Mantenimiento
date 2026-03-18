@@ -1,0 +1,30 @@
+name: Unit Tests and Coverage
+
+# Se ejecuta al hacer push o pull request a la rama main
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install coverage
+        
+    - name: Run tests with Coverage
+      # Este comando ejecuta los tests y falla si la cobertura no llega al 80%
+      run: |
+        coverage run -m unittest discover
+        coverage report -m --fail-under=80
